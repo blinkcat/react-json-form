@@ -1,0 +1,41 @@
+{
+  "version": "0.1.0",
+  "fields": [
+    {
+      "name": "a",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-a",
+        "placeholder": "a input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "expressions": {
+        "hide": "values.a=='hide'"
+      },
+      "group": [
+        {
+          "name": "b",
+          "type": "input",
+          "props": {
+            "label": "test-b",
+            "placeholder": "b input"
+          }
+        },
+        {
+          "name": "c",
+          "type": "input",
+          "props": {
+            "label": "test-c",
+            "placeholder": "c input"
+          }
+        }
+      ]
+    }
+  ]
+}

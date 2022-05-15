@@ -1,0 +1,59 @@
+{
+  "name": "react-json-form",
+  "version": "0.1.0",
+  "description": "react json form",
+  "main": "./dist/cjs/react-json-form.min.js",
+  "module": "./dist/es/react-json-form.min.js",
+  "browser": "./dist/umd/react-json-form.min.js",
+  "types": "./dist/types/index.d.ts",
+  "scripts": {
+    "build": "NODE_ENV=production rollup -c"
+  },
+  "dependencies": {
+    "formik": "^2.2.9",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "@types/lodash": "^4.14.182",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "rollup": "^2.72.1",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.31.2",
+    "tslib": "^2.4.0",
+    "typescript": "^4.6.4",
+    "eslint": "^8.16.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-config-prettier": "^8.5.0",
+    "prettier": "^2.6.2"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blinkcat/react-json-form.git"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": true
+  },
+  "keywords": [
+    "react",
+    "json",
+    "form"
+  ],
+  "author": "blinkcat",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blinkcat/react-json-form/issues"
+  },
+  "homepage": "https://github.com/blinkcat/react-json-form#readme"
+}

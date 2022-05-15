@@ -1,0 +1,5 @@
+{
+  "root": true,
+  "extends": ["react-app", "prettier"],
+  "rules": {}
+}
