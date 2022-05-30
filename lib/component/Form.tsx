@@ -1,10 +1,15 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useFormik, FormikProvider } from 'formik';
 import cloneDeep from 'lodash/cloneDeep';
-import merge from 'lodash/merge';
-import { IEnhancedField, IFormValues, IRawFields, IValidationConfig } from '../types';
+import { IField, IFormValues, IRawFields } from '../types';
 import { Field } from './Field';
-import { useFieldExtensions } from './useFieldExtensions';
+import {
+  addFieldExtensions,
+  runFieldExtensions,
+  addId,
+  addParent,
+  addKeyPath,
+} from '../fieldExtension';
 import './ui';
 
 export interface IJsonFormProps<Values = any> {
@@ -12,7 +17,6 @@ export interface IJsonFormProps<Values = any> {
   onChange?(values: Values): void;
   initialValues?: Values;
   idPrefix?: string;
-  validationConfig?: IValidationConfig;
 }
 
 export const JsonForm = <Values extends IFormValues = any>({
@@ -20,7 +24,6 @@ export const JsonForm = <Values extends IFormValues = any>({
   onChange,
   initialValues = {} as any,
   idPrefix = 'react-json-form-',
-  validationConfig,
 }: IJsonFormProps<Values>) => {
   // 创建form的state
   const formik = useFormik({
@@ -32,37 +35,19 @@ export const JsonForm = <Values extends IFormValues = any>({
     onChange?.(formik.values);
   }, [formik.values, onChange]);
 
-  const formikRef = useRef(formik);
+  useOnInit(() => {
+    addFieldExtensions(addId(idPrefix), addParent, addKeyPath);
+  });
 
-  formikRef.current = formik;
-
-  const mergedValidationConfig = useMemo(() => {
-    return merge({}, defaultValidationConfig, validationConfig);
-    // ignore validationConfig changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const { updateFields, notifyFieldsChanged } = useFieldExtensions(
-    formikRef,
-    idPrefix,
-    [],
-    mergedValidationConfig
-  );
-  // fields 是整个 form 结构的 single source of truth，但它是 mutable 的
-  // 因为在后续的过程中会在 fields 上添加新的数据，但并不是每种添加修改都需要更新组件
-  const resolvedFieldsRef = useRef<IEnhancedField[]>([]);
-
-  resolvedFieldsRef.current = useMemo(() => {
-    const fields = cloneDeep(source.fields);
-    updateFields(fields);
-    return fields;
-  }, [updateFields, source.fields]);
+  const resolvedFieldsRef = useRef<IField[]>([]);
+  const { resetForm } = formik;
 
   // 传入新 source 时，重置整个form
   useEffect(() => {
-    formikRef.current.resetForm();
-    notifyFieldsChanged(resolvedFieldsRef.current);
-  }, [notifyFieldsChanged, source]);
+    resolvedFieldsRef.current = cloneDeep(source.fields);
+    runFieldExtensions(resolvedFieldsRef.current);
+    resetForm();
+  }, [resetForm, source.fields]);
 
   // console.log('resolvedFields', resolvedFieldsRef.current);
 
@@ -78,14 +63,12 @@ export const JsonForm = <Values extends IFormValues = any>({
   );
 };
 
-const defaultValidationConfig: IValidationConfig = {
-  validators: [
-    {
-      name: 'required',
-      validation: (value) => {
-        return value == null || (typeof value === 'string' && value === '');
-      },
-    },
-  ],
-  validationMessages: [{ name: 'required', message: 'this field is required' }],
-};
+function useOnInit(callback: () => void) {
+  const isInit = useRef(true);
+
+  if (isInit.current) {
+    isInit.current = false;
+
+    callback();
+  }
+}

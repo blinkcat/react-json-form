@@ -1,11 +1,14 @@
 export interface IField {
+  readonly id?: string;
+  /**
+   * @private
+   */
+  _keyPath?: string;
   name?: string;
   type?: string; // 表示 widget
-  wrapper?: string[]; // string 还是 string[]
+  wrapper?: string[];
   description?: string;
-  // default?: any;
   props?: {
-    // 虽然 json 中只有那几只类型，但是可以通过 fieldExtension 来进行扩展，添加 object、function 等
     [prop: string]: any;
   };
   expressions?: {
@@ -27,27 +30,6 @@ export interface IField {
 export interface IRawFields {
   version: string;
   fields: IField[];
-}
-
-export interface IEnhancedField extends IField {
-  readonly id?: string;
-  _hide?: boolean;
-  // _expressions?: Array<(...args: any[]) => void>;
-  _keyPath?: string;
-  // get?(path: Required<IField>['name'] | Array<Required<IField>['name']>): IField;
-  readonly parent?: IField;
-  // internal use only
-  readonly form?: {
-    registerFieldValidator(name: string, validate: IFieldValidation): void;
-    unregisterFieldValidator(name: string): void;
-    setFieldValue(name: string, value: any): void;
-    getFieldValue(name: string): any;
-    reset: () => void;
-  };
-  notifyFieldsChanged?: (fields: IField | IField[]) => void;
-  readonly runExpressions?: () => void;
-  // readonly reset?: () => void;
-  readonly validateCreator?: (va?: string[]) => IFieldValidation;
 }
 
 export interface IFieldValidation {

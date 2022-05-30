@@ -1,14 +1,11 @@
 import React from 'react';
 import { registerWidget, registerWrapper } from '../registry';
-import { useField, Field, useFieldArray } from './Field';
+import { IField } from '../types';
+import { Field, useFieldArrayControl, useFieldControl } from '..';
 import './ui.css';
 
-const Input: React.FC<any> = ({ placeholder, label, required = false, hide = false }) => {
-  const [field, control] = useField();
-
-  if (hide) {
-    return null;
-  }
+const Input: React.FC<any> = ({ placeholder, label, required = false, hide = false, field }) => {
+  const control = useFieldControl(field);
 
   return (
     <div className="ui-input">
@@ -16,7 +13,7 @@ const Input: React.FC<any> = ({ placeholder, label, required = false, hide = fal
       <input
         id={field.id}
         placeholder={placeholder as string}
-        value={control?.value || ''}
+        value={control?.value}
         onChange={(e) => {
           control?.setValue(e.target.value);
         }}
@@ -30,14 +27,14 @@ const Input: React.FC<any> = ({ placeholder, label, required = false, hide = fal
 
 registerWidget('input', Input);
 
-const TestGroup: React.FC<any> = () => {
-  const [{ group }] = useField();
+const TestGroup: React.FC<any> = ({ field }) => {
+  const [{ group }] = field;
 
   return (
     <div className="ui-tset-group">
-      {group?.map((field, i) => (
-        <div key={i}>
-          <Field field={field} />
+      {group.map((f: any) => (
+        <div key={f.id}>
+          <Field field={f} />
         </div>
       ))}
     </div>
@@ -46,13 +43,13 @@ const TestGroup: React.FC<any> = () => {
 
 registerWidget('testGroup', TestGroup);
 
-const TestArray: React.FC<any> = () => {
-  const [field, control] = useFieldArray();
+const TestArray: React.FC<any> = ({ field }) => {
+  const control = useFieldArrayControl(field);
 
   return (
     <div>
       <ul>
-        {field.group?.map((subField, i) => (
+        {field.group?.map((subField: any, i: any) => (
           <li key={subField.id}>
             <Field field={subField} />
             <button type="button" onClick={() => control?.remove(i)}>
@@ -73,10 +70,11 @@ registerWidget('testArray', TestArray);
 interface IInputWrapperProps {
   label?: string;
   children?: React.ReactNode;
+  field: IField;
 }
 
-const InputWrapper: React.FC<IInputWrapperProps> = ({ children }) => {
-  const control = useField()[1];
+const InputWrapper: React.FC<IInputWrapperProps> = ({ children, field }) => {
+  const control = useFieldControl(field);
 
   return (
     <div className="ui-input-wrapper">
@@ -88,8 +86,11 @@ const InputWrapper: React.FC<IInputWrapperProps> = ({ children }) => {
 
 registerWrapper('inputWrapper', InputWrapper);
 
-const ArrayWrapper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const [_, control] = useFieldArray();
+const ArrayWrapper: React.FC<{ children?: React.ReactNode; field: IField }> = ({
+  children,
+  field,
+}) => {
+  const control = useFieldArrayControl(field);
 
   return (
     <div>

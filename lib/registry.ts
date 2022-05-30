@@ -14,7 +14,7 @@ export function findWidget(name: string) {
 // wrapper
 const wrapperRegistry: Map<string, React.ComponentType<any>> = new Map();
 
-export function registerWrapper(name: string, comp: React.ComponentType) {
+export function registerWrapper(name: string, comp: React.ComponentType<any>) {
   wrapperRegistry.set(name, comp);
 }
 
