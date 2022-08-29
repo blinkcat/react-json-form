@@ -1,0 +1,343 @@
+{
+  "version": "0.1.0",
+  "fields": [
+    {
+      "name": "a",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-a",
+        "placeholder": "a input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "b",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-b",
+        "placeholder": "b input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "c",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-c",
+        "placeholder": "c input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "d",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-d",
+        "placeholder": "d input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "e",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-e",
+        "placeholder": "e input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "f",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-f",
+        "placeholder": "f input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "g",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-g",
+        "placeholder": "g input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "h",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-h",
+        "placeholder": "h input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "i",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-i",
+        "placeholder": "i input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "j",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-j",
+        "placeholder": "j input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "k",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-k",
+        "placeholder": "k input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "l",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-l",
+        "placeholder": "l input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "m",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-m",
+        "placeholder": "m input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "n",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-n",
+        "placeholder": "n input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "o",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-o",
+        "placeholder": "o input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "p",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-p",
+        "placeholder": "p input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "q",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-q",
+        "placeholder": "q input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "r",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-r",
+        "placeholder": "r input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "s",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-s",
+        "placeholder": "s input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "t",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-t",
+        "placeholder": "t input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "u",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-u",
+        "placeholder": "u input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "v",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-v",
+        "placeholder": "v input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "w",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-w",
+        "placeholder": "w input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "x",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-x",
+        "placeholder": "x input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "y",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-y",
+        "placeholder": "y input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    },
+    {
+      "name": "z",
+      "type": "input",
+      "wrapper": ["inputWrapper"],
+      "props": {
+        "label": "test-z",
+        "placeholder": "z input"
+      },
+      "expressions": {
+        "props.required": "values.b=='a'"
+      },
+      "validators": []
+    }
+  ]
+}

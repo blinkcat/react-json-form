@@ -1,6 +1,6 @@
 {
-  "name": "react-json-form",
-  "version": "0.1.0",
+  "name": "@bc/react-json-form",
+  "version": "0.2.0",
   "description": "react json form",
   "main": "./dist/cjs/react-json-form.min.js",
   "module": "./dist/es/react-json-form.min.js",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "formik": "^2.2.9",
-    "lodash": "^4.17.21"
+    "zustand": "^4.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.0",

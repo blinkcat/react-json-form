@@ -1,41 +1,60 @@
-{
-  "version": "0.1.0",
-  "fields": [
-    {
-      "name": "a",
-      "type": "input",
-      "wrapper": ["inputWrapper"],
-      "props": {
-        "label": "test-a",
-        "placeholder": "a input"
-      },
-      "expressions": {
-        "props.required": "values.b=='a'"
-      },
-      "validators": []
+[
+  {
+    "name": "a",
+    "type": "input",
+    "wrapper": ["inputWrapper"],
+    "props": {
+      "label": "test-a",
+      "placeholder": "a input"
     },
-    {
-      "expressions": {
-        "hide": "values.a=='hide'"
-      },
-      "group": [
-        {
-          "name": "b",
-          "type": "input",
-          "props": {
-            "label": "test-b",
-            "placeholder": "b input"
-          }
-        },
-        {
-          "name": "c",
-          "type": "input",
-          "props": {
-            "label": "test-c",
-            "placeholder": "c input"
-          }
+    "expressions": {
+      "props.required": "values.b=='a'"
+    },
+    "validators": []
+  },
+  {
+    "expressions": {
+      "hide": "values.a=='hide'"
+    },
+    "group": [
+      {
+        "name": "b",
+        "type": "input",
+        "props": {
+          "label": "test-b",
+          "placeholder": "b input"
         }
-      ]
+      },
+      {
+        "name": "c",
+        "type": "input",
+        "props": {
+          "label": "test-c",
+          "placeholder": "c input"
+        }
+      }
+    ]
+  },
+  {
+    "name": "d",
+    "wrapper": ["arrayWrapper"],
+    "array": {
+      "type": "input",
+      "props": {
+        "label": "test-d",
+        "placeholder": "d input"
+      }
     }
-  ]
-}
+  },
+  {
+    "name": "e",
+    "type": "arrayComp",
+    "array": {
+      "type": "input",
+      "props": {
+        "label": "test-e",
+        "placeholder": "e input"
+      }
+    }
+  }
+]
