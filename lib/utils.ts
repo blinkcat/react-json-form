@@ -1,4 +1,4 @@
-import { IField, IInternalField } from './types';
+import { IField, IFormValues, IInternalField } from './types';
 
 let globalFieldId = 0;
 
@@ -42,17 +42,30 @@ export function makeInternalFields(
   fields: IField[],
   parentInternalField?: IInternalField,
   lastInternalFieldKeyPath?: string,
-  res: IInternalField[] = []
+  res: IInternalField[] = [],
+  values: IFormValues = {}
 ): IInternalField[] {
   for (const field of fields) {
     const internalField = makeAnInternalField(field, parentInternalField, lastInternalFieldKeyPath);
+    const curValues = values && field.name ? values[field.name] : values;
 
     if (field.group) {
       makeInternalFields(
         field.group,
         internalField,
         internalField.keyPath || lastInternalFieldKeyPath,
-        res
+        res,
+        curValues
+      );
+    }
+
+    if (field.array && Array.isArray(curValues) && curValues.length > 0) {
+      makeInternalFields(
+        curValues.map((_, i) => ({ ...field.array, name: `${i}` })),
+        internalField,
+        internalField.keyPath || lastInternalFieldKeyPath,
+        res,
+        curValues
       );
     }
 

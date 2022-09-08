@@ -1,16 +1,23 @@
 import React from 'react';
-import { Field, IInternalField, useFieldArrayControl, useFieldControl } from '../../lib';
+import {
+  Field,
+  IInternalField,
+  useFieldArrayControl,
+  useFieldControl,
+  useField,
+  useFieldGroup,
+} from '../../lib';
 import { IJsonFormConfig } from '../../lib/Config';
-import { useFieldGroup } from '../../lib/useFormStore';
 
-const Input: React.FC<any> = ({ placeholder, label, required = false, hide = false, field }) => {
-  const control = useFieldControl(field);
+const Input: React.FC<any> = ({ placeholder, label, required = false, hide = false }) => {
+  const field = useField();
+  const control = useFieldControl();
 
   return (
     <div className="ui-input">
-      <label htmlFor={field.id}>{`${label}${required ? '*' : ''}`}：</label>
+      <label htmlFor={`${field.id}`}>{`${label}${required ? '*' : ''}`}：</label>
       <input
-        id={field.id}
+        id={`${field.id}`}
         placeholder={placeholder as string}
         value={control?.value ?? ''}
         onChange={(e) => {
@@ -30,8 +37,8 @@ interface IInputWrapperProps {
   field: IInternalField;
 }
 
-const InputWrapper: React.FC<IInputWrapperProps> = ({ children, field }) => {
-  const control = useFieldControl(field);
+const InputWrapper: React.FC<IInputWrapperProps> = ({ children }) => {
+  const control = useFieldControl();
 
   return (
     <div className="ui-input-wrapper">
@@ -41,11 +48,8 @@ const InputWrapper: React.FC<IInputWrapperProps> = ({ children, field }) => {
   );
 };
 
-const ArrayWrapper: React.FC<{ children?: React.ReactNode; field: IInternalField }> = ({
-  children,
-  field,
-}) => {
-  const control = useFieldArrayControl(field);
+const ArrayWrapper: React.FC<any> = ({ children }) => {
+  const control = useFieldArrayControl();
 
   return (
     <div>
@@ -65,8 +69,9 @@ const ArrayWrapper: React.FC<{ children?: React.ReactNode; field: IInternalField
   );
 };
 
-const ArrayComp: React.FC<{ field: IInternalField }> = ({ field }) => {
-  const { add, remove } = useFieldArrayControl(field)!;
+const ArrayComp: React.FC = () => {
+  const { add, remove } = useFieldArrayControl()!;
+  const field = useField();
   const subFields = useFieldGroup(field);
 
   return (
@@ -90,8 +95,8 @@ const ArrayComp: React.FC<{ field: IInternalField }> = ({ field }) => {
   );
 };
 
-const Select: React.FC<any> = ({ label, options, field }) => {
-  const control = useFieldControl(field);
+const Select: React.FC<any> = ({ label, options }) => {
+  const control = useFieldControl();
 
   return (
     <div>
@@ -116,8 +121,8 @@ const Select: React.FC<any> = ({ label, options, field }) => {
   );
 };
 
-const Checkbox: React.FC<any> = ({ label, field }) => {
-  const control = useFieldControl(field);
+const Checkbox: React.FC = () => {
+  const control = useFieldControl();
 
   return (
     <div>

@@ -2,13 +2,13 @@ import React, { useCallback, useContext, useDebugValue, useEffect, useMemo, useR
 import { getIn, setIn } from 'formik';
 import { useConfig } from './Config';
 import { IField, IInternalField, IValidations } from './types';
-import {
-  useFormStore,
-  shallow,
-  useFieldGroup,
-  useFieldArray,
-  runWhenSetFormik,
-} from './useFormStore';
+import { StoreContext, useFieldGroup, shallow, useFieldArray } from './store';
+
+const FieldContext = React.createContext<IInternalField>(null as any);
+
+export function useField() {
+  return useContext(FieldContext);
+}
 
 export interface IFieldProps {
   field: IInternalField;
@@ -54,7 +54,7 @@ export const Field = React.memo<IFieldProps>(({ field }) => {
     if (components[field.type] == null) {
       throw Error(`can not find component ${field.type}!`);
     } else {
-      fieldTypeOrGroup = React.createElement(components[field.type], { ...props, field });
+      fieldTypeOrGroup = React.createElement(components[field.type], { ...props });
     }
   } else if (field.groupIds) {
     fieldTypeOrGroup = React.createElement(
@@ -65,16 +65,18 @@ export const Field = React.memo<IFieldProps>(({ field }) => {
   }
 
   return (
-    <ParentFieldStatusContext.Provider value={fieldStatus}>
-      {wrapperRender(fieldTypeOrGroup, props)}
-    </ParentFieldStatusContext.Provider>
+    <FieldContext.Provider value={field}>
+      <ParentFieldStatusContext.Provider value={fieldStatus}>
+        {wrapperRender(fieldTypeOrGroup, props)}
+      </ParentFieldStatusContext.Provider>
+    </FieldContext.Provider>
   );
 });
 
 Field.displayName = 'Field';
 
 function useFieldReset(field: IInternalField) {
-  const control = useFieldControl(field);
+  const control = useInternalFieldControl(field);
   const controlRef = useRef(control);
 
   useEffect(() => {
@@ -82,11 +84,12 @@ function useFieldReset(field: IInternalField) {
   }, [control]);
 
   const target = useRef(field);
+  const { useStore } = useContext(StoreContext);
 
   return useCallback(() => {
     if (
       controlRef.current == null ||
-      useFormStore.getState().fields.some((field) => field.id === target.current.id) === false
+      useStore.getState().fields.some((field) => field.id === target.current.id) === false
     ) {
       return;
     }
@@ -102,11 +105,12 @@ function useFieldReset(field: IInternalField) {
     if (controlRef.current.error != null) {
       controlRef.current.setError(undefined);
     }
-  }, []);
+  }, [useStore]);
 }
 
 function useInternalFieldControl(field: IInternalField) {
-  const { getFieldHelpers, getFieldMeta } = useFormStore(
+  const { useStore } = useContext(StoreContext);
+  const { getFieldHelpers, getFieldMeta } = useStore(
     (state) => ({
       getFieldHelpers: state.formik?.getFieldHelpers,
       getFieldMeta: state.formik?.getFieldMeta,
@@ -124,8 +128,9 @@ function useInternalFieldControl(field: IInternalField) {
   return { value, touched, error, setValue, setTouched, setError };
 }
 
-export function useFieldControl(field: IInternalField) {
-  const res = useInternalFieldControl(field);
+export function useFieldControl(field?: IInternalField) {
+  const currentfield = useField();
+  const res = useInternalFieldControl(field || currentfield);
   useDebugValue(res);
   return res;
 }
@@ -153,13 +158,13 @@ function useFieldWrapper(field: IInternalField) {
         const Comp = components[key];
 
         if (Comp) {
-          return React.createElement(Comp, { ...props, field }, acc);
+          return React.createElement(Comp, { ...props }, acc);
         }
 
         return acc;
       }, children);
     },
-    [field, components]
+    [field.wrapper, components]
   );
 }
 
@@ -185,7 +190,8 @@ function useFieldProps(field: IInternalField, propsFromExpressions?: any) {
 
 function useFieldExpressions(field: IInternalField) {
   const { expressions, id } = field;
-  const values = useFormStore((state) => state.formik?.values || {});
+  const { useStore } = useContext(StoreContext);
+  const values = useStore((state) => state.formik?.values || {});
 
   const { hideExpression, propsExpressions } = useMemo(() => {
     if (expressions == null || typeof expressions !== 'object') {
@@ -299,7 +305,8 @@ function useFieldValidators(field: IInternalField, validatorsFromProps: string[]
     [needValidation, validationsFromProps, validationsFromField, field, validationMessages]
   );
 
-  const { registerField, unregisterField } = useFormStore(
+  const { useStore } = useContext(StoreContext);
+  const { registerField, unregisterField } = useStore(
     (state) => ({
       registerField: state.formik?.registerField,
       unregisterField: state.formik?.unregisterField,
@@ -363,10 +370,14 @@ function useValidators(validatorsFromSw: IInternalField['validators']) {
   }, [validatorsFromSw, getValidator]);
 }
 
-export function useFieldArrayControl(field: IInternalField) {
+export function useFieldArrayControl(tfield?: IInternalField) {
+  const currentfield = useField();
+  const field = tfield || currentfield;
   const control = useInternalFieldControl(field);
-  const setFormikState = useFormStore((state) => state.formik?.setFormikState);
+  const { useStore } = useContext(StoreContext);
+  const setFormikState = useStore((state) => state.formik?.setFormikState);
   const { add: addField, remove: removeField } = useFieldArray(field);
+  const { runWhenSetFormik } = useContext(StoreContext);
 
   const hasControl = useMemo(() => {
     if (control == null || field.array == null || setFormikState == null) {
@@ -457,6 +468,7 @@ export function useFieldArrayControl(field: IInternalField) {
     valueInControl,
     touchedInControl,
     errorInControl,
+    runWhenSetFormik,
   ]);
 
   if (addAndRemove) {

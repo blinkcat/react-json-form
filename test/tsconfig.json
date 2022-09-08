@@ -1,0 +1,5 @@
+{
+  "compilerOptions": { "noEmit": true, "isolatedModules": true },
+  "extends": "../tsconfig.json",
+  "include": ["."]
+}

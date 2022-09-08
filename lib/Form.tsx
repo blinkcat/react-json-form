@@ -2,7 +2,7 @@ import React, { useDebugValue, useEffect, useLayoutEffect, useRef } from 'react'
 import { FormikConfig, useFormik } from 'formik';
 import { IField, IFormValues } from './types';
 import { Field } from './Field';
-import { useFormStore, useRootFields } from './useFormStore';
+import createStore, { StoreContext, useRootFields } from './store';
 import { makeInternalFields } from './utils';
 
 export interface IJsonFormProps<V extends IFormValues = IFormValues> {
@@ -18,8 +18,12 @@ export const JsonForm: React.FC<IJsonFormProps> = ({
   onSubmit = () => {},
   onValueChange,
 }) => {
-  const formik = useFormik({ initialValues, onSubmit });
+  const store = useStoreOnce();
+  const formik = useFormik({ initialValues, onSubmit, enableReinitialize: false });
+  const initialValuesRef = useRef(initialValues);
   const preFormik = usePrevious(formik);
+
+  useStoreView(store.useStore.getState());
 
   useLayoutEffect(() => {
     if (
@@ -29,16 +33,22 @@ export const JsonForm: React.FC<IJsonFormProps> = ({
       formik.touched !== preFormik.touched ||
       formik.isSubmitting !== preFormik.isSubmitting
     ) {
-      useFormStore.getState().setFormik(formik);
+      store.useStore.getState().setFormik(formik);
     }
-  }, [formik, preFormik]);
+  }, [formik, preFormik, store]);
 
   useEffect(() => {
-    useFormStore.getState().setFields(makeInternalFields(fields));
-  }, [fields]);
+    store.useStore
+      .getState()
+      .setFields(
+        makeInternalFields(fields, undefined, undefined, undefined, initialValuesRef.current)
+      );
+  }, [fields, store]);
 
   useEffect(() => {
-    onValueChange?.(formik.values);
+    if (firstRender.current === false) {
+      onValueChange?.(formik.values);
+    }
   }, [onValueChange, formik.values]);
 
   const { resetForm } = formik;
@@ -55,16 +65,12 @@ export const JsonForm: React.FC<IJsonFormProps> = ({
     firstRender.current = false;
   }, []);
 
-  useFormStateView();
-
-  const rootFields = useRootFields();
-
   return (
-    <form>
-      {rootFields.map((field) => (
-        <Field key={field.id} field={field} />
-      ))}
-    </form>
+    <StoreContext.Provider value={store}>
+      <form>
+        <RootFields />
+      </form>
+    </StoreContext.Provider>
   );
 };
 
@@ -83,6 +89,30 @@ function usePrevious<T>(value: T) {
   return valueRef.current;
 }
 
-function useFormStateView() {
-  useDebugValue(useFormStore.getState());
+function useStoreOnce() {
+  const ref = useRef<ReturnType<typeof createStore>>();
+
+  if (ref.current) {
+    return ref.current;
+  }
+
+  ref.current = createStore();
+
+  return ref.current;
+}
+
+function useStoreView(store: any) {
+  useDebugValue(store);
+}
+
+function RootFields() {
+  const rootFields = useRootFields();
+
+  return (
+    <>
+      {rootFields.map((field) => (
+        <Field key={field.id} field={field} />
+      ))}
+    </>
+  );
 }

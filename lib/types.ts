@@ -24,8 +24,8 @@ export interface IInternalField extends IField {
   groupIds?: FieldID[];
 }
 
-export interface IFormValues {
-  [name: string]: any;
+export interface IFormValues<T extends IFormValues = any> {
+  [name: string]: T;
 }
 
 export interface IValidations {

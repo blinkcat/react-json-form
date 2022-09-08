@@ -33,7 +33,7 @@ npm start
 
 ### JsonForm 组件
 
-接收一个 [Field](#field-的设计) 数组，渲染整个 Form 控件。
+接收一个 [Field](#field-design) 数组，渲染整个 Form 控件。
 
 ### JsonFormConfig
 
@@ -41,17 +41,21 @@ npm start
 
 也可以局部使用，覆盖全局配置。
 
+### useField
+
+react hook，用于获取当前组件对应的 Field 对象。
+
 ### useFieldControl
 
-一个 react hook，用于获取控件的 value、error、touched 信息，已经 setValue、setTouched、setError 方式修改控件的状态。
+react hook，用于获取控件的 value、error、touched 信息，已经 setValue、setTouched、setError 方式修改控件的状态。
 
 ### useFieldArrayControl
 
-一个 react hook，特别针对 array 类型控件，除了上面跳到的方法，额外增加了 add 和 remove 方法，用于增加删除子项。
+react hook，特别针对 array 类型控件，除了上面跳到的方法，额外增加了 add 和 remove 方法，用于增加删除子项。
 
 ### useConfig
 
-一个 react hook，可以获取全局配置
+react hook，可以获取全局配置
 
 ## Idea
 
@@ -69,7 +73,7 @@ Field 就是一个普通的对象，其中可以有多个属性，每个属性�
 
 Field 可以有一个`type`属性，代表这个 Field 将要渲染属性值中的 react component。
 
-```json
+```js
 {
   "type": "<component name>"
 }
@@ -77,7 +81,7 @@ Field 可以有一个`type`属性，代表这个 Field 将要渲染属性值中�
 
 Field 还可以有一个 `wrapper`属性，代表多个 react component，表示这个 Field 接下来渲染的 react element 都会作为这些 component 的 children。
 
-```json
+```js
 {
   "wrapper": ["component1", "component2"]
 }
@@ -87,7 +91,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 两者的主要区别是，如果当前 Field 含有嵌套 Field，`wrapper`只负责将传递给它的 children 直接渲染出来。而`type`则是全权负责嵌套 Field 的渲染工作，甚至可以渲染部分渲染，或者不渲染嵌套 Field。
 
-```json
+```js
 {
   "wrapper": ["component1", "component2"],
   "type": "<component name>"
@@ -96,7 +100,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 `name`属性表示这个 Field 渲染的控件所录入的用户输入在最终的表单值中以 name 属性值作为 key。
 
-```json
+```js
 /**
  * form value: {"a": "user input value" }
  */
@@ -108,7 +112,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 `group`属性表示嵌套的 Field。
 
-```json
+```js
 /**
  * form value:
  * {
@@ -129,7 +133,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 也可以利用`group`将多个 Field 包在一起。
 
-```json
+```js
 {
   "wrapper": ["wrapper component"],
   "group": [
@@ -141,7 +145,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 `array`属性值是一个普通的 Field，表示表单结果中的一个数组值的类型。
 
-```json
+```js
 /**
  * form value: {"a": ["1", "2", "3"]}
  */
@@ -155,7 +159,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 或者是一个更复杂的类型。
 
-```json
+```js
 /**
  * form value:
  * {
@@ -175,7 +179,7 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 `props`属性表示将要传递给`type`或/和`wrapper`组件的 props。
 
-```json
+```js
 {
   "name": "a",
   "type": "component",
@@ -190,28 +194,28 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 `expressions`属性的子属性值是一个特殊字符串，可以表示简单的 js 代码，因此我们可以实现不同 Field 之间的关联关系。子属性值中的`values`代表整个表单值，从中可以获取到关联表单控件的 value。
 
-```json
+```js
 [
   {
-    "name": "a",
-    "type": "component"
+    name: 'a',
+    type: 'component',
   },
   // 如果在a控件中输入 "hide"，b控件不显示
   // 如果a控件值不为空，b控件则需要显示自己必填
   {
-    "name": "b",
-    "type": "component",
-    "expressions": {
-      "hide": "values.a=='hide'",
-      "props.required": "values.a!==''"
-    }
-  }
-]
+    name: 'b',
+    type: 'component',
+    expressions: {
+      hide: "values.a=='hide'",
+      'props.required': "values.a!==''",
+    },
+  },
+];
 ```
 
 `validators`属性表示一个 Field 的验证方式。
 
-```json
+```js
 {
   "name": "a",
   "type": "component",
@@ -222,12 +226,12 @@ Field 还可以有一个 `wrapper`属性，代表多个 react component，表示
 
 ## Todos
 
-- [] adequate test cases
-- [] fewer bugs
-- [] more demos
-- [] global validators
-- [] english version doc
-- [] plugins
+- ~~adequate test cases~~
+- fewer bugs
+- more demos
+- global validators
+- english version doc
+- plugins
 
 ## Others
 

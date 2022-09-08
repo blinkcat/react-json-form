@@ -16,7 +16,7 @@ const defaultJsonFormConfig: IJsonFormConfig = {
 export const JsonFormConfigContext = React.createContext<IJsonFormConfig>(defaultJsonFormConfig);
 
 export const JsonFormConfig: React.FC<{
-  value: IJsonFormConfig;
+  value: Partial<IJsonFormConfig>;
   children: React.ReactNode;
 }> = ({ value, children }) => {
   const lastConfig = useConfig();
@@ -35,7 +35,7 @@ export function useConfig() {
   return useContext(JsonFormConfigContext);
 }
 
-function mergeConfig(old: IJsonFormConfig, cur: IJsonFormConfig): IJsonFormConfig {
+function mergeConfig(old: IJsonFormConfig, cur: Partial<IJsonFormConfig>): IJsonFormConfig {
   return {
     ...old,
     ...cur,

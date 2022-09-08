@@ -1,16 +1,10 @@
-import { useCallback, useMemo } from 'react';
-import { useFormik } from 'formik';
+import React, { useCallback, useContext, useMemo } from 'react';
 import create from 'zustand';
+import { useFormik } from 'formik';
 import { FieldID, IInternalField } from './types';
 import { makeInternalFields } from './utils';
 
 export { default as shallow } from 'zustand/shallow';
-
-const cbQueueWithSetFormik: Array<() => void> = [];
-
-export function runWhenSetFormik(cb: () => void) {
-  cbQueueWithSetFormik.push(cb);
-}
 
 export interface IFormStore {
   formik: ReturnType<typeof useFormik> | null;
@@ -19,44 +13,36 @@ export interface IFormStore {
   setFields(fields: IInternalField[]): void;
 }
 
-export const useFormStore = create<IFormStore>((set) => ({
-  formik: null,
-  setFormik: (newFormik) => {
-    set({ formik: newFormik });
-    if (cbQueueWithSetFormik.length) {
-      cbQueueWithSetFormik.forEach((cb) => cb());
-      cbQueueWithSetFormik.length = 0;
-    }
-  },
-  fields: [],
-  setFields: (newFields) => {
-    set({ fields: newFields });
-  },
-}));
+export const StoreContext = React.createContext<ReturnType<typeof createStore>>(null as any);
 
-export function useFieldGroup(field: IInternalField) {
-  const fieldsMap = useFieldsMap();
+export default function createStore() {
+  const cbQueueWithSetFormik: Array<() => void> = [];
 
-  if (field.groupIds) {
-    return field.groupIds.map((id) => fieldsMap.get(id)!);
+  function runWhenSetFormik(cb: () => void) {
+    cbQueueWithSetFormik.push(cb);
   }
-  return [];
-}
 
-export function useRootFields() {
-  return useFormStore((state) => state.fields.filter((field) => field.parentId === -1));
-}
+  const useStore = create<IFormStore>((set) => ({
+    formik: null,
+    setFormik: (newFormik) => {
+      set({ formik: newFormik });
+      if (cbQueueWithSetFormik.length) {
+        cbQueueWithSetFormik.forEach((cb) => cb());
+        cbQueueWithSetFormik.length = 0;
+      }
+    },
+    fields: [],
+    setFields: (newFields) => {
+      set({ fields: newFields });
+    },
+  }));
 
-export function useParentField(field: IInternalField) {
-  return useFormStore((state) => {
-    if (field.parentId !== -1) {
-      return state.fields.find((fd) => fd.id === field.parentId);
-    }
-  });
+  return { runWhenSetFormik, useStore };
 }
 
 export function useFieldsMap() {
-  const fields = useFormStore((state) => state.fields);
+  const { useStore } = useContext(StoreContext);
+  const fields = useStore((state) => state.fields);
 
   return useMemo(() => {
     const m = new Map<FieldID, IInternalField>();
@@ -69,8 +55,33 @@ export function useFieldsMap() {
   }, [fields]);
 }
 
+export function useFieldGroup(field: IInternalField) {
+  const fieldsMap = useFieldsMap();
+
+  if (field.groupIds) {
+    return field.groupIds.map((id) => fieldsMap.get(id)!);
+  }
+  return [];
+}
+
+export function useRootFields() {
+  const { useStore } = useContext(StoreContext);
+  return useStore((state) => state.fields.filter((field) => field.parentId === -1));
+}
+
+export function useParentField(field: IInternalField) {
+  const { useStore } = useContext(StoreContext);
+
+  return useStore((state) => {
+    if (field.parentId !== -1) {
+      return state.fields.find((fd) => fd.id === field.parentId);
+    }
+  });
+}
+
 export function useFieldArray(parentField: IInternalField) {
-  const setFields = useFormStore((state) => state.setFields);
+  const { useStore } = useContext(StoreContext);
+  const setFields = useStore((state) => state.setFields);
   const fieldsMap = useFieldsMap();
   const changeKeyPath = useCallback(
     (field: IInternalField, lastInternalFieldKeyPath: string) => {
