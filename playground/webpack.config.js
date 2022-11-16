@@ -2,25 +2,29 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
+const isDev = process.env.NODE_ENV === 'development';
+
 /**
  * @type {import('webpack').Configuration}
  */
 module.exports = {
-  devtool: 'source-map',
-  mode: 'development',
+  devtool: isDev ? 'source-map' : false,
+  mode: isDev ? 'development' : 'production',
   entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
   },
-  devServer: {
-    hot: true,
-    port: 1234,
-    client: {
-      logging: 'error',
-      overlay: false,
-    },
-    open: true,
-  },
+  devServer: isDev
+    ? {
+        hot: true,
+        port: 1234,
+        client: {
+          logging: 'error',
+          overlay: false,
+        },
+        open: true,
+      }
+    : undefined,
   resolve: {
     extensions: ['.js', '.json', '.ts', '.tsx'],
   },
@@ -39,11 +43,11 @@ module.exports = {
             // cacheDirectory: true,
             presets: [
               '@babel/preset-env',
-              ['@babel/preset-react', { development: true }],
+              ['@babel/preset-react', { development: isDev }],
               '@babel/preset-typescript',
             ],
             plugins: [
-              require.resolve('react-refresh/babel'),
+              isDev && require.resolve('react-refresh/babel'),
               [
                 '@babel/plugin-transform-runtime',
                 {
@@ -52,7 +56,7 @@ module.exports = {
                   regenerator: true,
                 },
               ],
-            ],
+            ].filter(Boolean),
           },
         },
       },
@@ -62,6 +66,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './index.html',
     }),
-    new ReactRefreshWebpackPlugin({ overlay: false }),
-  ],
+    isDev && new ReactRefreshWebpackPlugin({ overlay: false }),
+  ].filter(Boolean),
 };
