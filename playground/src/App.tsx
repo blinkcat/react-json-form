@@ -7,19 +7,19 @@ import JsonForm, { IJsonFormProps, IField, JsonFormConfig } from '../../lib';
 import { config } from './Config';
 
 import mockJson from '../mock.json';
-import simpleJson from './json/simple.json';
-import arrayJson from './json/array.json';
-import nestedJson from './json/nested.json';
-import relationJson from './json/relation.json';
+// import simpleJson from './json/simple.json';
+// import arrayJson from './json/array.json';
+// import nestedJson from './json/nested.json';
+// import relationJson from './json/relation.json';
 
 import './index.css';
 
 const demos = [
   JSON.stringify(mockJson, null, 2),
-  JSON.stringify(simpleJson, null, 2),
-  JSON.stringify(arrayJson, null, 2),
-  JSON.stringify(nestedJson, null, 2),
-  JSON.stringify(relationJson, null, 2),
+  // JSON.stringify(simpleJson, null, 2),
+  // JSON.stringify(arrayJson, null, 2),
+  // JSON.stringify(nestedJson, null, 2),
+  // JSON.stringify(relationJson, null, 2),
 ];
 const initalJson = demos[0];
 
@@ -113,10 +113,10 @@ const App: React.FC = () => {
             <span style={{ color: 'rgba(243, 244, 246, 1)', marginRight: 5 }}>select demos:</span>
             <select value={state.demoIndex} onChange={onSelectChange}>
               <option value="0">playground</option>
-              <option value="1">simple</option>
+              {/* <option value="1">simple</option>
               <option value="2">array</option>
               <option value="3">nested</option>
-              <option value="4">relation</option>
+              <option value="4">relation</option> */}
             </select>
           </label>
         </div>

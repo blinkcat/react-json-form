@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useContext } from 'react';
 import create from 'zustand';
 import { useFormik } from 'formik';
-import { FieldID, IInternalField } from './types';
-import { makeInternalFields } from './utils';
+import { IInternalField } from './types';
+// import { makeInternalFields } from './utils';
 
 export { default as shallow } from 'zustand/shallow';
 
@@ -40,154 +40,161 @@ export default function createStore() {
   return { runWhenSetFormik, useStore };
 }
 
-export function useFieldsMap() {
+export function useFields() {
   const { useStore } = useContext(StoreContext);
-  const fields = useStore((state) => state.fields);
 
-  return useMemo(() => {
-    const m = new Map<FieldID, IInternalField>();
-
-    for (const field of fields) {
-      m.set(field.id, field);
-    }
-
-    return m;
-  }, [fields]);
+  return useStore((state) => state.fields);
 }
 
-export function useFieldGroup(field: IInternalField) {
-  const fieldsMap = useFieldsMap();
+// export function useFieldsMap() {
+//   const fields = useFields();
 
-  if (field.groupIds) {
-    return field.groupIds.map((id) => fieldsMap.get(id)!);
+//   return useMemo(() => {
+//     const m = new Map<FieldID, IInternalField>();
+
+//     for (const field of fields) {
+//       m.set(field.key, field);
+//     }
+
+//     return m;
+//   }, [fields]);
+// }
+
+export function useFieldGroup(field: IInternalField) {
+  const fields = useFields();
+
+  if (field.group) {
+    return fields.filter((fd) => fd.parentKey === field.key);
   }
+
   return [];
 }
 
 export function useRootFields() {
-  const { useStore } = useContext(StoreContext);
-  return useStore((state) => state.fields.filter((field) => field.parentId === -1));
+  const fields = useFields();
+
+  return fields.filter((field) => field.parentKey === '');
 }
 
 export function useParentField(field: IInternalField) {
   const { useStore } = useContext(StoreContext);
 
   return useStore((state) => {
-    if (field.parentId !== -1) {
-      return state.fields.find((fd) => fd.id === field.parentId);
+    if (field.parentKey) {
+      return state.fields.find((fd) => fd.key === field.parentKey);
     }
   });
 }
 
-export function useFieldArray(parentField: IInternalField) {
-  const { useStore } = useContext(StoreContext);
-  const setFields = useStore((state) => state.setFields);
-  const fieldsMap = useFieldsMap();
-  const changeKeyPath = useCallback(
-    (field: IInternalField, lastInternalFieldKeyPath: string) => {
-      let newKeyPath = lastInternalFieldKeyPath;
+// export function useFieldArray(parentField: IInternalField) {
+//   const { useStore } = useContext(StoreContext);
+//   const setFields = useStore((state) => state.setFields);
+//   const fieldsMap = useFieldsMap();
+//   const changeKeyPath = useCallback(
+//     (field: IInternalField, lastInternalFieldKeyPath: string) => {
+//       let newKeyPath = lastInternalFieldKeyPath;
 
-      if (field.name) {
-        newKeyPath = lastInternalFieldKeyPath + '.' + field.name;
-        fieldsMap.set(field.id, { ...field, keyPath: newKeyPath });
-      }
+//       if (field.name) {
+//         newKeyPath = lastInternalFieldKeyPath + '.' + field.name;
+//         fieldsMap.set(field.id, { ...field, keyPath: newKeyPath });
+//       }
 
-      for (const id of field.groupIds || []) {
-        changeKeyPath(fieldsMap.get(id)!, newKeyPath);
-      }
-    },
-    [fieldsMap]
-  );
+//       for (const id of field.groupIds || []) {
+//         changeKeyPath(fieldsMap.get(id)!, newKeyPath);
+//       }
+//     },
+//     [fieldsMap]
+//   );
 
-  const add = useCallback(
-    (index: number) => {
-      if (parentField.array == null) {
-        return;
-      }
+//   const add = useCallback(
+//     (index: number) => {
+//       if (parentField.array == null) {
+//         return;
+//       }
 
-      if (index < 0 || index > parentField.groupIds!.length) {
-        console.warn(`index ${index} shoud be between 0 and ${parentField.groupIds?.length}`);
-        return;
-      }
+//       if (index < 0 || index > parentField.groupIds!.length) {
+//         console.warn(`index ${index} shoud be between 0 and ${parentField.groupIds?.length}`);
+//         return;
+//       }
 
-      for (let i = index; i < parentField.groupIds!.length; i++) {
-        changeKeyPath(
-          { ...fieldsMap.get(parentField.groupIds![i])!, name: `${i + 1}` },
-          parentField.keyPath!
-        );
-      }
+//       for (let i = index; i < parentField.groupIds!.length; i++) {
+//         changeKeyPath(
+//           { ...fieldsMap.get(parentField.groupIds![i])!, name: `${i + 1}` },
+//           parentField.keyPath!
+//         );
+//       }
 
-      const newField = makeInternalFields(
-        [{ ...parentField.array, name: `${index}` }],
-        undefined,
-        parentField.keyPath
-      )[0];
+//       const newField = makeInternalFields(
+//         [{ ...parentField.array, name: `${index}` }],
+//         undefined,
+//         parentField.keyPath
+//       )[0];
 
-      newField.parentId = parentField.id;
-      fieldsMap.set(newField.id, newField);
+//       newField.parentId = parentField.id;
+//       fieldsMap.set(newField.id, newField);
 
-      const newGroupIds = [...parentField.groupIds!];
+//       const newGroupIds = [...parentField.groupIds!];
 
-      newGroupIds.splice(index, 0, newField.id);
+//       newGroupIds.splice(index, 0, newField.id);
 
-      const newParentField = { ...parentField, groupIds: newGroupIds };
+//       const newParentField = { ...parentField, groupIds: newGroupIds };
 
-      fieldsMap.set(newParentField.id, newParentField);
+//       fieldsMap.set(newParentField.id, newParentField);
 
-      setFields(Array.from(fieldsMap.values()));
-    },
-    [changeKeyPath, fieldsMap, parentField, setFields]
-  );
+//       setFields(Array.from(fieldsMap.values()));
+//     },
+//     [changeKeyPath, fieldsMap, parentField, setFields]
+//   );
 
-  const remove = useCallback(
-    (index: number) => {
-      if (parentField.array == null) {
-        return;
-      }
+//   const remove = useCallback(
+//     (index: number) => {
+//       if (parentField.array == null) {
+//         return;
+//       }
 
-      if (index < 0 || index > parentField.groupIds!.length) {
-        console.warn(`index ${index} shoud be between 0 and ${parentField.groupIds?.length}`);
-        return;
-      }
+//       if (index < 0 || index > parentField.groupIds!.length) {
+//         console.warn(`index ${index} shoud be between 0 and ${parentField.groupIds?.length}`);
+//         return;
+//       }
 
-      const target = fieldsMap.get(parentField.groupIds![index]);
+//       const target = fieldsMap.get(parentField.groupIds![index]);
 
-      if (target == null) {
-        console.warn(`field with id ${parentField.groupIds![index]} doesn't exist in fields!`);
-        return;
-      }
+//       if (target == null) {
+//         console.warn(`field with id ${parentField.groupIds![index]} doesn't exist in fields!`);
+//         return;
+//       }
 
-      function removeAll(ids?: FieldID[]) {
-        if (ids == null) {
-          return;
-        }
+//       function removeAll(ids?: FieldID[]) {
+//         if (ids == null) {
+//           return;
+//         }
 
-        for (const id of ids) {
-          removeAll(fieldsMap.get(id)?.groupIds);
-          fieldsMap.delete(id);
-        }
-      }
+//         for (const id of ids) {
+//           removeAll(fieldsMap.get(id)?.groupIds);
+//           fieldsMap.delete(id);
+//         }
+//       }
 
-      fieldsMap.delete(target.id);
-      removeAll(target.groupIds);
+//       fieldsMap.delete(target.id);
+//       removeAll(target.groupIds);
 
-      for (let i = index + 1; i < parentField.groupIds!.length; i++) {
-        changeKeyPath(
-          { ...fieldsMap.get(parentField.groupIds![i])!, name: `${i - 1}` },
-          parentField.keyPath!
-        );
-      }
+//       for (let i = index + 1; i < parentField.groupIds!.length; i++) {
+//         changeKeyPath(
+//           { ...fieldsMap.get(parentField.groupIds![i])!, name: `${i - 1}` },
+//           parentField.keyPath!
+//         );
+//       }
 
-      const newGroupIds = [...parentField.groupIds!];
+//       const newGroupIds = [...parentField.groupIds!];
 
-      newGroupIds.splice(index, 1);
+//       newGroupIds.splice(index, 1);
 
-      fieldsMap.set(parentField.id, { ...parentField, groupIds: newGroupIds });
+//       fieldsMap.set(parentField.id, { ...parentField, groupIds: newGroupIds });
 
-      setFields(Array.from(fieldsMap.values()));
-    },
-    [changeKeyPath, fieldsMap, parentField, setFields]
-  );
+//       setFields(Array.from(fieldsMap.values()));
+//     },
+//     [changeKeyPath, fieldsMap, parentField, setFields]
+//   );
 
-  return { add, remove };
-}
+//   return { add, remove };
+// }

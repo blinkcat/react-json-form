@@ -1,8 +1,15 @@
 import React, { useCallback, useContext, useDebugValue, useEffect, useMemo, useRef } from 'react';
-import { getIn, setIn } from 'formik';
 import { useConfig } from './Config';
-import { IField, IInternalField, IValidations } from './types';
-import { StoreContext, useFieldGroup, shallow, useFieldArray } from './store';
+import {
+  IComparators,
+  IConditionsProperties,
+  IField,
+  IInternalField,
+  IValidations,
+  TAccumulatedConditions,
+} from './types';
+import { StoreContext, useFieldGroup, shallow } from './store';
+import { get } from './utils';
 
 const FieldContext = React.createContext<IInternalField>(null as any);
 
@@ -15,12 +22,12 @@ export interface IFieldProps {
 }
 
 export const Field = React.memo<IFieldProps>(({ field }) => {
-  // field.props field.expressions
-  const { hide, props: propsFromExpressions } = useFieldExpressions(field);
-  const props = useFieldProps(field, propsFromExpressions);
-  const fieldStatus = useMemo(() => {
-    return { disabled: props.disabled };
-  }, [props.disabled]);
+  const conditions = useConditions(field.conditions);
+  const props = useFieldProps(field, conditions);
+  const fieldStatus = useMemo(
+    () => ({ disabled: props.disabled, readonly: props.readonly, required: props.required }),
+    [props.disabled, props.readonly, props.required]
+  );
   // field.wrapper
   const { components } = useConfig();
   const wrapperRender = useFieldWrapper(field);
@@ -39,12 +46,12 @@ export const Field = React.memo<IFieldProps>(({ field }) => {
   useEffect(() => reset, [reset]);
 
   useEffect(() => {
-    if (hide) {
+    if (conditions.hide) {
       reset();
     }
-  }, [hide, reset]);
+  }, [conditions.hide, reset]);
 
-  if (hide) {
+  if (conditions.hide) {
     return null;
   }
 
@@ -56,11 +63,11 @@ export const Field = React.memo<IFieldProps>(({ field }) => {
     } else {
       fieldTypeOrGroup = React.createElement(components[field.type], { ...props });
     }
-  } else if (field.groupIds) {
+  } else if (field.group) {
     fieldTypeOrGroup = React.createElement(
       'div',
       { className: 'field-group' },
-      group.map((subField) => <Field field={subField} key={subField.id} />)
+      group.map((subField) => <Field field={subField} key={subField.key} />)
     );
   }
 
@@ -89,7 +96,7 @@ function useFieldReset(field: IInternalField) {
   return useCallback(() => {
     if (
       controlRef.current == null ||
-      useStore.getState().fields.some((field) => field.id === target.current.id) === false
+      useStore.getState().fields.some((field) => field.key === target.current.key) === false
     ) {
       return;
     }
@@ -118,12 +125,12 @@ function useInternalFieldControl(field: IInternalField) {
     shallow
   );
 
-  if (field.keyPath == null || getFieldMeta == null || getFieldHelpers == null) {
+  if (field.actualName == null || getFieldMeta == null || getFieldHelpers == null) {
     return null;
   }
 
-  const { value, touched, error } = getFieldMeta(field.keyPath);
-  const { setValue, setTouched, setError } = getFieldHelpers(field.keyPath);
+  const { value, touched, error } = getFieldMeta(field.actualName);
+  const { setValue, setTouched, setError } = getFieldHelpers(field.actualName);
 
   return { value, touched, error, setValue, setTouched, setError };
 }
@@ -168,96 +175,33 @@ function useFieldWrapper(field: IInternalField) {
   );
 }
 
-const ParentFieldStatusContext = React.createContext<{ disabled: boolean }>({ disabled: false });
+const ParentFieldStatusContext = React.createContext<IConditionsProperties>({
+  disabled: false,
+  hide: false,
+  required: false,
+  readonly: false,
+});
 
 function useParentFieldContext() {
   return useContext(ParentFieldStatusContext);
 }
 
-function useFieldProps(field: IInternalField, propsFromExpressions?: any) {
-  const { disabled: parentDisabled } = useParentFieldContext();
+function useFieldProps(field: IInternalField, propsFromConditions?: IConditionsProperties) {
+  const {
+    disabled: parentDisabled,
+    required: parentRequired,
+    readonly: parentReadonly,
+  } = useParentFieldContext();
 
   return useMemo(() => {
-    const props = { ...field.props, ...propsFromExpressions };
+    const props = { ...field.props, ...propsFromConditions };
 
-    if (parentDisabled === true) {
-      props.disabled = true;
-    }
+    props.disabled = parentDisabled || props.disabled;
+    props.required = parentRequired || props.required;
+    props.readonly = parentReadonly || props.readonly;
 
     return props;
-  }, [field.props, propsFromExpressions, parentDisabled]);
-}
-
-function useFieldExpressions(field: IInternalField) {
-  const { expressions, id } = field;
-  const { useStore } = useContext(StoreContext);
-  const values = useStore((state) => state.formik?.values || {});
-
-  const { hideExpression, propsExpressions } = useMemo(() => {
-    if (expressions == null || typeof expressions !== 'object') {
-      return {};
-    }
-
-    let hideExpression: (values: any) => boolean;
-
-    switch (typeof expressions.hide) {
-      case 'string':
-        // eslint-disable-next-line no-new-func
-        hideExpression = new Function('values', `return Boolean(${expressions.hide})`) as any;
-        break;
-      case 'function':
-        hideExpression = expressions.hide;
-        break;
-      default:
-        hideExpression = () => Boolean(expressions.hide);
-    }
-
-    const propsExpressions: { [name: string]: (values: any) => any } = Object.keys(expressions)
-      .filter((key) => key.startsWith('props.'))
-      .reduce((acc: any, key) => {
-        const keyWithoutPrefix = key.slice(6);
-
-        switch (typeof expressions[key]) {
-          case 'function':
-            acc[keyWithoutPrefix] = expressions[key];
-            break;
-          case 'string':
-            // eslint-disable-next-line no-new-func
-            acc[keyWithoutPrefix] = new Function('values', `return ${expressions[key]}`) as any;
-            break;
-          default:
-            throw Error(
-              `type error in field with id ${id}:
-              field.expressions['${key}'] must be function or string type, now it's ${key} with type ${typeof key}.`
-            );
-        }
-        return acc;
-      }, {});
-
-    return { hideExpression, propsExpressions };
-  }, [expressions, id]);
-
-  const hide = useMemo(() => {
-    if (hideExpression) {
-      return hideExpression(values);
-    }
-
-    return false;
-  }, [hideExpression, values]);
-
-  const props = useMemo(() => {
-    if (propsExpressions) {
-      return Object.keys(propsExpressions).reduce((acc: any, key) => {
-        acc[key] = propsExpressions[key](values);
-
-        return acc;
-      }, {});
-    }
-
-    return {};
-  }, [propsExpressions, values]);
-
-  return { hide, props };
+  }, [field.props, propsFromConditions, parentDisabled, parentRequired, parentReadonly]);
 }
 
 function useFieldValidators(field: IInternalField, validatorsFromProps: string[]) {
@@ -279,9 +223,10 @@ function useFieldValidators(field: IInternalField, validatorsFromProps: string[]
 
   const needValidation = useMemo(() => {
     return (
-      field.keyPath != null && (validationsFromField.length > 0 || validationsFromProps.length > 0)
+      field.actualName != null &&
+      (validationsFromField.length > 0 || validationsFromProps.length > 0)
     );
-  }, [validationsFromField, validationsFromProps, field.keyPath]);
+  }, [validationsFromField, validationsFromProps, field.actualName]);
 
   const fieldValidation = useCallback(
     (value: any) => {
@@ -316,12 +261,12 @@ function useFieldValidators(field: IInternalField, validatorsFromProps: string[]
 
   useEffect(() => {
     if (needValidation) {
-      registerField?.(field.keyPath!, { validate: fieldValidation });
+      registerField?.(field.actualName!, { validate: fieldValidation });
       return () => {
-        unregisterField?.(field.keyPath!);
+        unregisterField?.(field.actualName!);
       };
     }
-  }, [needValidation, field.keyPath, fieldValidation, registerField, unregisterField]);
+  }, [needValidation, field.actualName, fieldValidation, registerField, unregisterField]);
 }
 
 function useValidators(validatorsFromSw: IInternalField['validators']) {
@@ -370,142 +315,144 @@ function useValidators(validatorsFromSw: IInternalField['validators']) {
   }, [validatorsFromSw, getValidator]);
 }
 
-export function useFieldArrayControl(tfield?: IInternalField) {
-  const currentfield = useField();
-  const field = tfield || currentfield;
-  const control = useInternalFieldControl(field);
-  const { useStore } = useContext(StoreContext);
-  const setFormikState = useStore((state) => state.formik?.setFormikState);
-  const { add: addField, remove: removeField } = useFieldArray(field);
-  const { runWhenSetFormik } = useContext(StoreContext);
+// conditions
+const Comparators = {
+  equals: (fieldValue: any, targetValue: any) => {
+    if (fieldValue === targetValue) {
+      return true;
+    }
 
-  const hasControl = useMemo(() => {
-    if (control == null || field.array == null || setFormikState == null) {
+    if (typeof fieldValue !== typeof targetValue || typeof fieldValue !== 'object') {
       return false;
     }
+
+    const fieldKeys = Object.keys(fieldValue);
+    const targetKeys = Object.keys(targetValue);
+
+    if (fieldKeys.length !== targetKeys.length) {
+      return false;
+    }
+
+    for (const key of fieldKeys) {
+      if (Object.prototype.hasOwnProperty.call(fieldValue, key)) {
+        if (!Comparators.equals(fieldValue[key], targetValue[key])) {
+          return false;
+        }
+      }
+    }
+
     return true;
-  }, [control, field.array, setFormikState]);
-  const valueInControl = control?.value;
-  const touchedInControl = control?.touched;
-  const errorInControl = control?.error;
-
-  const addAndRemove = useMemo(() => {
-    if (!hasControl) {
-      return null;
+  },
+  contains: (fieldValue: any, targetValue: any) => {
+    if (typeof fieldValue === 'string' && typeof targetValue === 'string') {
+      return fieldValue.includes(targetValue);
     }
 
-    function add(index?: number) {
-      const value = Array.isArray(valueInControl) ? valueInControl : [];
-      const i = index ?? value.length;
-
-      runWhenSetFormik(() => addField(i));
-
-      setFormikState!((prevState) => ({
-        ...prevState,
-        values: setIn(
-          prevState.values,
-          field.keyPath!,
-          arrayInsert(getIn(prevState.values, field.keyPath!), i, getDefaultValue(field.array!))
-        ),
-        touched: touchedInControl
-          ? setIn(
-              prevState.touched,
-              field.keyPath!,
-              arrayInsert(getIn(prevState.touched, field.keyPath!), i, null)
-            )
-          : prevState.touched,
-        errors: errorInControl
-          ? setIn(
-              prevState.errors,
-              field.keyPath!,
-              arrayInsert(getIn(prevState.errors, field.keyPath!), i, null)
-            )
-          : prevState.errors,
-      }));
+    if (fieldValue != null && typeof fieldValue === 'object') {
+      return Object.keys(fieldValue).some((key) =>
+        Comparators.equals(fieldValue[key], targetValue)
+      );
     }
 
-    function remove(index: number) {
-      const value = Array.isArray(valueInControl) ? valueInControl : [];
+    return false;
+  },
 
-      if (index < 0 || index >= value.length) {
-        return;
+  gt: (fieldValue: any, targetValue: any) => {
+    if (typeof fieldValue === 'number' && typeof targetValue === 'number') {
+      return fieldValue > targetValue;
+    }
+    return false;
+  },
+
+  lt: (fieldValue: any, targetValue: any) => {
+    if (typeof fieldValue === 'number' && typeof targetValue === 'number') {
+      return fieldValue < targetValue;
+    }
+    return false;
+  },
+
+  in: (fieldValue: any, targetValue: any) => {
+    return Comparators.contains(targetValue, fieldValue);
+  },
+};
+
+function useConditions(conditions: Required<IField>['conditions'] = {}): IConditionsProperties {
+  const { useStore } = useContext(StoreContext);
+  const values = useStore((state) => state.formik?.values || {});
+
+  const conditionFns = useMemo(() => {
+    return Object.keys(conditions).reduce((acc, key) => {
+      const theCondition = (conditions as any)[key] || false;
+
+      if (typeof theCondition === 'boolean') {
+        // eslint-disable-next-line no-new-func
+        acc[key] = new Function(`return Boolean(${theCondition})`);
+      } else {
+        // eslint-disable-next-line no-new-func
+        acc[key] = new Function(
+          'Comparators',
+          'values',
+          'get',
+          `
+            try{
+              return ${compileCondition('AND', [theCondition])}
+            }catch(e){
+              console.error(e);
+              return false;
+            }
+          `
+        );
       }
 
-      runWhenSetFormik(() => removeField(index));
+      return acc;
+    }, {} as any);
+  }, [conditions]);
 
-      setFormikState!((prevState) => ({
-        ...prevState,
-        values: setIn(
-          prevState.values,
-          field.keyPath!,
-          arrayDelete(getIn(prevState.values, field.keyPath!), index)
-        ),
-        touched: touchedInControl
-          ? setIn(
-              prevState.touched,
-              field.keyPath!,
-              arrayDelete(getIn(prevState.touched, field.keyPath!), index)
-            )
-          : prevState.touched,
-        errors: errorInControl
-          ? setIn(
-              prevState.errors,
-              field.keyPath!,
-              arrayDelete(getIn(prevState.errors, field.keyPath!), index)
-            )
-          : prevState.errors,
-      }));
-    }
-
-    return { add, remove };
-  }, [
-    hasControl,
-    addField,
-    removeField,
-    setFormikState,
-    field.keyPath,
-    field.array,
-    valueInControl,
-    touchedInControl,
-    errorInControl,
-    runWhenSetFormik,
-  ]);
-
-  if (addAndRemove) {
-    return { ...control, ...addAndRemove };
-  }
-
-  return null;
+  return useMemo(() => {
+    return Object.keys(conditionFns).reduce((acc, key) => {
+      acc[key] = conditionFns[key](Comparators, values, get);
+      return acc;
+    }, {} as any);
+  }, [values, conditionFns]);
 }
 
-function getDefaultValue(field: IField) {
-  if (field.array) {
-    return [];
-  }
+const comparatorNames = ['equals', 'contains', 'in', 'gt', 'lt'];
+const comparatorConditions = ['AND', 'OR', 'NOT'];
 
-  if (field.group) {
-    return {};
-  }
+function compileCondition(condition: string, accumulatedConditions: TAccumulatedConditions[]) {
+  const res: string[] = accumulatedConditions.map((accumulatedCondition) => {
+    return (
+      '(' +
+      Object.keys(accumulatedCondition)
+        .map((key) => {
+          if (comparatorConditions.includes(key)) {
+            return compileCondition(key, (accumulatedCondition as any)[key]);
+          }
+          return compileComparator(key, (accumulatedCondition as any)[key]);
+        })
+        .join('&&') +
+      ')'
+    );
+  });
 
-  return '';
+  switch (condition) {
+    case 'OR':
+      return `(${res.join('||')})`;
+    case 'NOT':
+      return `!(${res.join('&&')})`;
+    default:
+      return `(${res.join('&&')})`;
+  }
 }
 
-function arrayInsert(array: any[] | undefined, index: number, value: any) {
-  if (array == null) {
-    return [value];
-  }
-
-  const newArray = array.slice();
-
-  newArray.splice(index, 0, value);
-
-  return newArray;
-}
-
-function arrayDelete(array: any[], index: number) {
-  const newArray = array.slice();
-
-  newArray.splice(index, 1);
-
-  return newArray;
+function compileComparator(name: string, comparator: IComparators) {
+  return Object.keys(comparator)
+    .filter((key) => comparatorNames.includes(key))
+    .map(
+      (key) =>
+        `Comparators.${key}(get(values, '${name}'), JSON.parse('${JSON.stringify(
+          (comparator as any)[key]
+        )}'))`
+    )
+    .join('&&');
 }

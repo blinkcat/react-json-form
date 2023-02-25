@@ -1,76 +1,53 @@
-import { IField, IFormValues, IInternalField } from './types';
+import { IField, IInternalField } from './types';
 
-let globalFieldId = 0;
-
-function getUniqueId() {
-  return globalFieldId++;
-}
-
-function makeAnInternalField(
-  field: IField,
-  parentInternalField?: IInternalField,
-  lastInternalFieldKeyPath?: string
-): IInternalField {
-  const internalField: IInternalField = {
-    ...field,
-    parentId: -1,
-    keyPath: '',
-    id: getUniqueId(),
-  };
-
-  if (field.group || field.array) {
-    internalField.groupIds = [];
-  }
-
-  if (parentInternalField) {
-    internalField.parentId = parentInternalField.id;
-    parentInternalField.groupIds?.push(internalField.id);
-  }
-
-  if (internalField.name) {
-    internalField.keyPath = internalField.name;
-
-    if (lastInternalFieldKeyPath) {
-      internalField.keyPath = lastInternalFieldKeyPath + '.' + internalField.keyPath;
-    }
-  }
-
-  return internalField;
-}
-
-export function makeInternalFields(
+// convert IField to IInternalField
+export function convert2InternalFields(
   fields: IField[],
-  parentInternalField?: IInternalField,
-  lastInternalFieldKeyPath?: string,
-  res: IInternalField[] = [],
-  values: IFormValues = {}
-): IInternalField[] {
-  for (const field of fields) {
-    const internalField = makeAnInternalField(field, parentInternalField, lastInternalFieldKeyPath);
-    const curValues = values && field.name ? values[field.name] : values;
+  parentKey = '',
+  parentActualName = '',
+  res: IInternalField[] = []
+) {
+  for (let i = 0; i < fields.length; i++) {
+    const iField: IInternalField = {
+      ...fields[i],
+      parentKey,
+      key: '',
+    };
 
-    if (field.group) {
-      makeInternalFields(
-        field.group,
-        internalField,
-        internalField.keyPath || lastInternalFieldKeyPath,
-        res,
-        curValues
+    iField.key = `${parentKey ? parentKey + '_' : ''}${iField.name || i}`;
+    iField.actualName =
+      iField.name && parentActualName ? parentActualName + '.' + iField.name : iField.name;
+
+    res.push(iField);
+
+    if (fields[i].group) {
+      convert2InternalFields(
+        fields[i].group!,
+        iField.key,
+        iField.actualName || parentActualName,
+        res
       );
     }
-
-    if (field.array && Array.isArray(curValues) && curValues.length > 0) {
-      makeInternalFields(
-        curValues.map((_, i) => ({ ...field.array, name: `${i}` })),
-        internalField,
-        internalField.keyPath || lastInternalFieldKeyPath,
-        res,
-        curValues
-      );
-    }
-
-    res.push(internalField);
   }
 
   return res;
+}
+
+export function get(obj: any, path: string) {
+  if (path.includes('.')) {
+    const paths = path.split('.');
+    let target = obj;
+
+    for (let i = 0; i < paths.length; i++) {
+      target = target[paths[i]];
+
+      if (target == null) {
+        return target;
+      }
+    }
+
+    return target;
+  }
+
+  return obj[path];
 }

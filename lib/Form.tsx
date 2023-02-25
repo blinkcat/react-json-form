@@ -3,7 +3,7 @@ import { FormikConfig, useFormik } from 'formik';
 import { IField, IFormValues } from './types';
 import { Field } from './Field';
 import createStore, { StoreContext, useRootFields } from './store';
-import { makeInternalFields } from './utils';
+import { convert2InternalFields } from './utils';
 
 export interface IJsonFormProps<V extends IFormValues = IFormValues> {
   fields: IField[];
@@ -20,7 +20,7 @@ export const JsonForm: React.FC<IJsonFormProps> = ({
 }) => {
   const store = useStoreOnce();
   const formik = useFormik({ initialValues, onSubmit, enableReinitialize: false });
-  const initialValuesRef = useRef(initialValues);
+  // const initialValuesRef = useRef(initialValues);
   const preFormik = usePrevious(formik);
 
   useStoreView(store.useStore.getState());
@@ -38,32 +38,24 @@ export const JsonForm: React.FC<IJsonFormProps> = ({
   }, [formik, preFormik, store]);
 
   useEffect(() => {
-    store.useStore
-      .getState()
-      .setFields(
-        makeInternalFields(fields, undefined, undefined, undefined, initialValuesRef.current)
-      );
+    store.useStore.getState().setFields(convert2InternalFields(fields, '', ''));
   }, [fields, store]);
 
+  const isFirstRender = useFirstRender();
+
   useEffect(() => {
-    if (firstRender.current === false) {
+    if (isFirstRender.current === false) {
       onValueChange?.(formik.values);
     }
-  }, [onValueChange, formik.values]);
+  }, [onValueChange, formik.values, isFirstRender]);
 
-  const { resetForm } = formik;
+  // const { resetForm } = formik;
 
-  useEffect(() => {
-    if (firstRender.current === false) {
-      resetForm();
-    }
-  }, [fields, resetForm]);
-
-  const firstRender = useRef(true);
-
-  useEffect(() => {
-    firstRender.current = false;
-  }, []);
+  // useEffect(() => {
+  //   if (firstRender.current === false) {
+  //     resetForm();
+  //   }
+  // }, [fields, resetForm]);
 
   return (
     <StoreContext.Provider value={store}>
@@ -78,6 +70,16 @@ JsonForm.defaultProps = {
   initialValues: {},
   onSubmit() {},
 };
+
+function useFirstRender() {
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    firstRender.current = false;
+  }, []);
+
+  return firstRender;
+}
 
 function usePrevious<T>(value: T) {
   const valueRef = useRef<T>();
@@ -111,7 +113,7 @@ function RootFields() {
   return (
     <>
       {rootFields.map((field) => (
-        <Field key={field.id} field={field} />
+        <Field key={field.key} field={field} />
       ))}
     </>
   );

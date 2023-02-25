@@ -1,4 +1,23 @@
-export type FieldID = string | number;
+export interface IComparators {
+  equals?: any;
+  contains?: any;
+  in?: Record<any, any> | Array<any>;
+  gt?: number;
+  lt?: number;
+}
+
+export interface IConditions {
+  [name: string]: IComparators;
+}
+
+export type TAccumulatedConditions =
+  | IConditions
+  | {
+      AND?: TAccumulatedConditions[];
+      OR?: TAccumulatedConditions[];
+      NOT?: TAccumulatedConditions[];
+    };
+
 /**
  * single form field
  */
@@ -9,19 +28,27 @@ export interface IField {
   props?: {
     [prop: string]: any;
   };
-  expressions?: {
-    [expr: string]: any;
+  conditions?: {
+    hide?: TAccumulatedConditions | boolean;
+    disabled?: TAccumulatedConditions | boolean;
+    required?: TAccumulatedConditions | boolean;
+    readonly?: TAccumulatedConditions | boolean;
   };
   group?: IField[];
-  array?: IField;
   validators?: IValidations[''] | string | (string | [string, any])[];
 }
 
+export interface IConditionsProperties {
+  hide?: boolean;
+  disabled?: boolean;
+  required?: boolean;
+  readonly?: boolean;
+}
+
 export interface IInternalField extends IField {
-  id: FieldID;
-  parentId: FieldID;
-  keyPath?: string;
-  groupIds?: FieldID[];
+  parentKey: string;
+  key: string;
+  actualName?: string;
 }
 
 export interface IFormValues<T extends IFormValues = any> {

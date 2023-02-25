@@ -7,14 +7,24 @@
       "label": "test-a",
       "placeholder": "a input"
     },
-    "expressions": {
-      "props.required": "values.b=='a'"
-    },
     "validators": []
   },
   {
-    "expressions": {
-      "hide": "values.a=='hide'"
+    "wrapper": ["boxWrapper"],
+    "conditions": {
+      "readonly": {
+        "r": {
+          "equals": true
+        }
+      },
+      "disabled": {
+        "d": {
+          "equals": true
+        }
+      }
+    },
+    "props": {
+      "label": "b and c"
     },
     "group": [
       {
@@ -23,6 +33,22 @@
         "props": {
           "label": "test-b",
           "placeholder": "b input"
+        },
+        "conditions": {
+          "hide": {
+            "OR": [
+              {
+                "a": {
+                  "in": ["2", "3"]
+                }
+              },
+              {
+                "c": {
+                  "equals": "3"
+                }
+              }
+            ]
+          }
         }
       },
       {
@@ -36,25 +62,17 @@
     ]
   },
   {
-    "name": "d",
-    "wrapper": ["arrayWrapper"],
-    "array": {
-      "type": "input",
-      "props": {
-        "label": "test-d",
-        "placeholder": "d input"
-      }
+    "name": "r",
+    "type": "checkbox",
+    "props": {
+      "label": "b and c is readonly?"
     }
   },
   {
-    "name": "e",
-    "type": "arrayComp",
-    "array": {
-      "type": "input",
-      "props": {
-        "label": "test-e",
-        "placeholder": "e input"
-      }
+    "name": "d",
+    "type": "checkbox",
+    "props": {
+      "label": "b and c is disabled?"
     }
   }
 ]
